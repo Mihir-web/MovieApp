@@ -55,6 +55,9 @@ const fileFilter = (req, file, cb) => {
 // Multer upload configuration
 const upload = multer({ storage: storageOptions, fileFilter });
 
+app.get('/', async (req, res) => {
+  res.redirect('/api/movies');
+});
 // API Route to fetch all movies
 app.get('/api/movies', async (req, res) => {
   try {
