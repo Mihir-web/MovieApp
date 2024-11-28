@@ -32,7 +32,11 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+// mongoose.connect(process.env.MONGODB_URI)
+//   .then(() => console.log('MongoDB connected successfully'))
+//   .catch((err) => console.error('MongoDB connection error:', err));
+
+mongoose.connect(databaseConfig.url)
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -158,11 +162,33 @@ app.get('/api/editmovie/:movie_id', async (req, res) => {
     if (!movie) {
       return res.status(404).send('Movie not found');
     }
-    res.render('editMovieForm', { movieData: movie });
+
+    // Extract required properties
+    const movieData = {
+      _id: movie._id,
+      Movie_ID: movie.Movie_ID,
+      Title: movie.Title,
+      Year: movie.Year,
+      Rated: movie.Rated,
+      Released: movie.Released,
+      Runtime: movie.Runtime,
+      Genre: movie.Genre,
+      Director: movie.Director,
+      Writer: movie.Writer,
+      Actors: movie.Actors,
+      Plot: movie.Plot,
+      Language: movie.Language,
+      Country: movie.Country,
+      Awards: movie.Awards,
+      Poster: movie.Poster,
+    };
+
+    res.render('editMovieForm', { movieData });
   } catch (err) {
     res.status(500).send('Error loading movie for editing: ' + err.message);
   }
 });
+
 
 // Update movie data
 app.post('/api/movies/:movie_id', upload.single('Poster'), [
