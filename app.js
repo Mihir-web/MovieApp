@@ -1,14 +1,3 @@
-/******************************************************************************
-***
-* ITE5315 – Assignment 2
-* I declare that this assignment is my own work in accordance with Humber Academic Policy.
-* No part of this assignment has been copied manually or electronically from any other source
-* (including web sites) or distributed to other students.
-*
-* Name: Mihirbhai Hiteshbhai Hirpara Student ID: N01635700 Date: 28/10/2024
-*
-******************************************************************************/
-
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -17,7 +6,8 @@ const { body, validationResult } = require('express-validator');
 const bodyParser = require('body-parser');
 const { engine } = require('express-handlebars');
 const databaseConfig = require('./config/database');
-const Movies = require('./models/movies_data');
+const ListingsModel = require('./models/listings'); // Renamed for clarity
+
 const app = express();
 const port = process.env.PORT || 8000;
 
@@ -32,21 +22,17 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Connect to MongoDB
-// mongoose.connect(process.env.MONGODB_URI)
-//   .then(() => console.log('MongoDB connected successfully'))
-//   .catch((err) => console.error('MongoDB connection error:', err));
-
-mongoose.connect(databaseConfig.url)
+mongoose
+  .connect(databaseConfig.url)
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Custom file storage settings for multer
+// Multer configuration for file uploads
 const storageOptions = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/images/'),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 
-// File filter to ensure only JPG files are uploaded
 const fileFilter = (req, file, cb) => {
   const isJpg = file.mimetype === 'image/jpeg';
   if (isJpg) {
@@ -56,194 +42,130 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer upload configuration
 const upload = multer({ storage: storageOptions, fileFilter });
 
-app.get('/', async (req, res) => {
-  res.redirect('/api/movies');
+// Routes
+app.get('/', (req, res) => {
+  res.redirect('/api/listing');
 });
-// API Route to fetch all movies
-app.get('/api/movies', async (req, res) => {
+
+app.get('/api/listing', async (req, res) => {
   try {
-    const movies = await Movies.find();
-    if (movies.length) {
-      const result = movies.map((movie) => ({
-        _id: movie._id,
-        Movie_ID: movie.Movie_ID,
-        Title: movie.Title,
-        Year: movie.Year,
-        Rated: movie.Rated,
-        Released: movie.Released,
-        Runtime: movie.Runtime,
-        Genre: movie.Genre,
-        Director: movie.Director,
-        Writer: movie.Writer,
-        Actors: movie.Actors,
-        Plot: movie.Plot,
-        Language: movie.Language,
-        Country: movie.Country,
-        Awards: movie.Awards,
-        Poster: movie.Poster,
-        Rating: movie.Rating,
-        Metascore: movie.Metascore,
-        imdbRating: movie.imdbRating,
-        imdbVotes: movie.imdbVotes,
-        imdbID: movie.imdbID,
-        Type: movie.Type
+    const listingData = await ListingsModel.find().limit(10);
+    if (listingData.length) {
+      const result = listingData.map((listing) => ({
+        _id: listing._id,
+        listing_url: listing.listing_url,
+        name: listing.name,
+        summary: listing.summary,
+        space: listing.space,
+        description: listing.description,
+        neighborhood_overview: listing.neighborhood_overview,
+        notes: listing.notes,
+        transit: listing.transit,
+        access: listing.access,
+        interaction: listing.interaction,
+        house_rules: listing.house_rules,
+        property_type: listing.property_type,
+        room_type: listing.room_type,
+        bed_type: listing.bed_type,
+        minimum_nights: listing.minimum_nights,
+        maximum_nights: listing.maximum_nights,
+        cancellation_policy: listing.cancellation_policy,
+        last_scraped: listing.last_scraped,
+        calendar_last_scraped: listing.calendar_last_scraped,
+        first_review: listing.first_review,
+        last_review: listing.last_review,
+        accommodates: listing.accommodates,
+        bedrooms: listing.bedrooms,
+        beds: listing.beds,
+        number_of_reviews: listing.number_of_reviews,
+        bathrooms: listing.bathrooms,
+        amenities: listing.amenities,
+        price: listing.price,
+        security_deposit: listing.security_deposit,
+        cleaning_fee: listing.cleaning_fee,
+        extra_people: listing.extra_people,
+        guests_included: listing.guests_included,
+        images: listing.images,
+        host: listing.host,
+        address: listing.address,
+        location: listing.location,
+        availability: listing.availability,
+        review_scores: listing.review_scores,
+        reviews: listing.reviews,
       }));
+      console.log(result);
       res.render('allData', { result });
     } else {
-      res.status(404).render('error');
+      res.status(404).render('error', { message: 'No listings found' });
     }
   } catch (err) {
-    res.status(500).send('Error fetching movies: ' + err.message);
+    res.status(500).send('Error fetching listings: ' + err.message);
   }
 });
 
-// API Route to fetch a single movie by its ID
-app.get('/api/movies/:movie_id', async (req, res) => {
+app.get('/api/listing/:listingId', async (req, res) => {
   try {
-    const movie = await Movies.findById(req.params.movie_id);
-    if (!movie) {
-      return res.status(404).send("Movie not found");
+    const listingId = req.params.listingId;
+    const listingData = await ListingsModel.find({"_id":listingId}).limit(10);
+    if (listingData.length) {
+      const result = listingData.map((listing) => ({
+        _id: listing._id,
+        listing_url: listing.listing_url,
+        name: listing.name,
+        summary: listing.summary,
+        space: listing.space,
+        description: listing.description,
+        neighborhood_overview: listing.neighborhood_overview,
+        notes: listing.notes,
+        transit: listing.transit,
+        access: listing.access,
+        interaction: listing.interaction,
+        house_rules: listing.house_rules,
+        property_type: listing.property_type,
+        room_type: listing.room_type,
+        bed_type: listing.bed_type,
+        minimum_nights: listing.minimum_nights,
+        maximum_nights: listing.maximum_nights,
+        cancellation_policy: listing.cancellation_policy,
+        last_scraped: listing.last_scraped,
+        calendar_last_scraped: listing.calendar_last_scraped,
+        first_review: listing.first_review,
+        last_review: listing.last_review,
+        accommodates: listing.accommodates,
+        bedrooms: listing.bedrooms,
+        beds: listing.beds,
+        number_of_reviews: listing.number_of_reviews,
+        bathrooms: listing.bathrooms,
+        amenities: listing.amenities,
+        price: listing.price,
+        security_deposit: listing.security_deposit,
+        cleaning_fee: listing.cleaning_fee,
+        extra_people: listing.extra_people,
+        guests_included: listing.guests_included,
+        images: listing.images,
+        host: listing.host,
+        address: listing.address,
+        location: listing.location,
+        availability: listing.availability,
+        review_scores: listing.review_scores,
+        reviews: listing.reviews,
+      }));
+      console.log(result);
+      res.render('allData', { result });
+    } else {
+      res.status(404).render('error', { message: 'No listings found' });
     }
-    res.json(movie);
   } catch (err) {
-    res.status(500).send('Error fetching movie: ' + err.message);
+    res.status(500).send('Error fetching listings: ' + err.message);
   }
 });
 
-// API Route to render movie add form
-app.get('/api/addmovie', (req, res) => {
-  res.render('addMovieForm');
-});
+// Other routes like movies and forms...
 
-// Route to create a new movie with validation
-app.post('/api/movie', upload.single('Poster'), [
-  body('Movie_ID').isInt({ min: 1 }).withMessage('Movie_ID must be a positive integer'),
-  body('Title').notEmpty().withMessage('Title is required'),
-  body('Year').isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('Enter a valid year'),
-  body('Rated').notEmpty().withMessage('Rated is required'),
-  body('Released').isDate().withMessage('Released must be a valid date (YYYY-MM-DD)'),
-  body('Runtime').notEmpty().withMessage('Runtime is required'),
-  body('Genre').notEmpty().withMessage('Genre is required'),
-  body('Director').notEmpty().withMessage('Director is required'),
-  body('Writer').notEmpty().withMessage('Writer is required'),
-  body('Actors').notEmpty().withMessage('Actors are required'),
-  body('Plot').notEmpty().withMessage('Plot is required'),
-  body('Language').notEmpty().withMessage('Language is required'),
-  body('Country').notEmpty().withMessage('Country is required')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  if (!req.file) {
-    return res.status(400).json({ error: 'Poster image is required' });
-  }
-
-  try {
-    const movieData = {
-      ...req.body,
-      Poster: `/images/${req.file.filename}` // Save file path in DB
-    };
-    const newMovie = await Movies.create(movieData);
-    res.redirect('/api/movies');
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Route to edit movie data
-app.get('/api/editmovie/:movie_id', async (req, res) => {
-  try {
-    const movie = await Movies.findById(req.params.movie_id);
-    if (!movie) {
-      return res.status(404).send('Movie not found');
-    }
-
-    // Extract required properties
-    const movieData = {
-      _id: movie._id,
-      Movie_ID: movie.Movie_ID,
-      Title: movie.Title,
-      Year: movie.Year,
-      Rated: movie.Rated,
-      Released: movie.Released,
-      Runtime: movie.Runtime,
-      Genre: movie.Genre,
-      Director: movie.Director,
-      Writer: movie.Writer,
-      Actors: movie.Actors,
-      Plot: movie.Plot,
-      Language: movie.Language,
-      Country: movie.Country,
-      Awards: movie.Awards,
-      Poster: movie.Poster,
-    };
-
-    res.render('editMovieForm', { movieData });
-  } catch (err) {
-    res.status(500).send('Error loading movie for editing: ' + err.message);
-  }
-});
-
-
-// Update movie data
-app.post('/api/movies/:movie_id', upload.single('Poster'), [
-  body('Movie_ID').isInt({ min: 1 }).withMessage('Movie_ID must be a positive integer'),
-  body('Title').notEmpty().withMessage('Title is required'),
-  body('Year').isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('Enter a valid year'),
-  body('Rated').notEmpty().withMessage('Rated is required'),
-  body('Released').isDate().withMessage('Released must be a valid date (YYYY-MM-DD)'),
-  body('Runtime').notEmpty().withMessage('Runtime is required'),
-  body('Genre').notEmpty().withMessage('Genre is required'),
-  body('Director').notEmpty().withMessage('Director is required'),
-  body('Writer').notEmpty().withMessage('Writer is required'),
-  body('Actors').notEmpty().withMessage('Actors are required'),
-  body('Plot').notEmpty().withMessage('Plot is required'),
-  body('Language').notEmpty().withMessage('Language is required'),
-  body('Country').notEmpty().withMessage('Country is required')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  let movieData = req.body;
-  if (req.file) {
-    movieData.Poster = `/images/${req.file.filename}`;
-  }
-
-  try {
-    const updatedMovie = await Movies.findByIdAndUpdate(req.params.movie_id, movieData, { new: true });
-    if (!updatedMovie) {
-      return res.status(404).send('Movie not found');
-    }
-    res.redirect('/api/movies');
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Delete movie by ID with SweetAlert confirmation
-app.get('/api/deletemovie/:movie_id', async (req, res) => {
-  try {
-    const deletedMovie = await Movies.findByIdAndDelete(req.params.movie_id);
-    if (!deletedMovie) {
-      return res.status(404).send('Movie not found');
-    }
-    res.json({ message: 'Movie deleted successfully' });
-  } catch (err) {
-    res.status(500).send('Error deleting movie: ' + err.message);
-  }
-});
-
-// Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-
-module.exports = app; 
+module.exports = app;
